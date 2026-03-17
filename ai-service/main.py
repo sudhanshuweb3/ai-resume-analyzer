@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.parser import router as parser_router
+from app.models.schemas import HealthResponse
 
 app = FastAPI(
     title="AI Resume Analyzer NLP Service",
@@ -16,10 +18,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-def read_root():
-    return {"status": "AI Service is running successfully."}
+app.include_router(parser_router, prefix="/api/v1/parser", tags=["Parser"])
 
-@app.get("/health")
+@app.get("/", response_model=HealthResponse)
+def read_root():
+    return HealthResponse(status="AI Service is running successfully.", version="1.0.0")
+
+@app.get("/health", response_model=HealthResponse)
 def health_check():
-    return {"status": "UP"}
+    return HealthResponse(status="UP", version="1.0.0")
