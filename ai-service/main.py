@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.parser import router as parser_router
+from app.api.analyzer import router as analyzer_router
 from app.models.schemas import HealthResponse
 
 app = FastAPI(
@@ -19,6 +20,7 @@ app.add_middleware(
 )
 
 app.include_router(parser_router, prefix="/api/v1/parser", tags=["Parser"])
+app.include_router(analyzer_router, prefix="/api/v1/nlp", tags=["NLP Analysis"])
 
 @app.get("/", response_model=HealthResponse)
 def read_root():
