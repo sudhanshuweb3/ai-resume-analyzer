@@ -74,10 +74,25 @@ public class AnalysisService {
     }
 
     private int calculateAtsScore(AiAnalysisResponse aiResult) {
-        double matchPercentage = aiResult.getMatchPercentage();
-        int penalty = aiResult.getReadabilityPenalty();
-        // The AI service returns 0-100. Subtract readability penalty.
-        return (int) Math.max(0, Math.min(100, matchPercentage - penalty));
+        List<String> matched = aiResult.getMatchedKeywords();
+        List<String> missing = aiResult.getMissingKeywords();
+
+        int totalKeywords = (matched != null ? matched.size() : 0) + (missing != null ? missing.size() : 0);
+
+        // Factor 1: Hard keyword match (50% weight)
+        double hardMatchRatio = totalKeywords > 0
+                ? (double) (matched != null ? matched.size() : 0) / totalKeywords
+                : 0.0;
+        double hardMatchScore = hardMatchRatio * 50;
+
+        // Factor 2: Contextual similarity (30% weight) — matchPercentage is 0-100
+        double similarityScore = (aiResult.getMatchPercentage() / 100.0) * 30;
+
+        // Factor 3: Structure bonus (20% weight) — penalised by readabilityPenalty (max 20)
+        double structureScore = Math.max(0, 20 - aiResult.getReadabilityPenalty());
+
+        int finalScore = (int) Math.round(hardMatchScore + similarityScore + structureScore);
+        return Math.max(0, Math.min(100, finalScore));
     }
 
     private AnalysisResultDto mapToDto(AnalysisResult result) {
